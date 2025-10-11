@@ -1,0 +1,384 @@
+\documentclass{article}
+
+\usepackage{graphicx}%
+\usepackage{subcaption}%
+\usepackage{multirow}%
+\usepackage{amsmath,amssymb,amsfonts}%
+\usepackage{amsthm}%
+\usepackage{mathrsfs}%
+\usepackage[title]{appendix}%
+\usepackage{xcolor}%
+\usepackage{textcomp}%
+\usepackage{manyfoot}%
+\usepackage{booktabs}%
+\usepackage{algorithm}%
+\usepackage{algorithmicx}%
+\usepackage{algpseudocode}%
+\usepackage{listings}%
+\usepackage{bm}%
+\usepackage[normalem]{ulem}  % for \sout
+\usepackage{float}
+\usepackage{placeins}  % For \FloatBarrier
+\usepackage[
+colorlinks=true,
+linkcolor=blue,
+citecolor=red,
+urlcolor=magenta
+]{hyperref}
+\usepackage{geometry}
+\geometry{
+  left=15mm,
+  right=15mm,
+  top=10mm,
+  bottom=10mm
+}
+\usepackage{onimage}
+
+%%%% 
+
+%% as per the requirement new theorem styles can be included as shown below
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}%
+\newtheorem{proposition}[theorem]{Proposition}%
+
+\theoremstyle{remark} %
+\newtheorem{example}{Example}%
+\newtheorem{remark}{Remark}%
+
+\theoremstyle{definition} % <--- 修改这里 (定义用 definition 样式)
+\newtheorem{definition}{Definition}%
+
+\newcommand{\ip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\U}{\mathcal U}
+\newcommand{\cwrremark}[1]{\textcolor{blue}{[CWR: #1]}}
+\newcommand{\ysremark}[1]{\textcolor{red}{[YS: #1]}}
+\newcommand{\solidline}{\rule[0.5ex]{1.5em}{0.6pt}}
+\newcommand{\dashedline}{\makebox[1.5em][l]{\rule[0.5ex]{0.3em}{0.6pt}\hspace{0.2em}%
+    \rule[0.5ex]{0.3em}{0.6pt}\hspace{0.2em}%
+    \rule[0.5ex]{0.3em}{0.6pt}}}
+
+\raggedbottom
+%% \unnumbered% uncomment this for unnumbered level heads
+
+\begin{document}
+
+\title{MAE 557 Mini-Project Two}
+
+\author{Yu Shuai}
+
+\maketitle
+
+\section{Governing equations for the 2D compressible lid-driven cavity flow}
+\label{sec:problem_1}
+
+Generally speaking, the governing equations of a single-component compressible flow consist of:
+\begin{itemize}
+\item the continuity equation
+\item the momentum equation
+\item the energy equation
+  \item the equation of state
+  \end{itemize}
+
+  Here, since the flow is viscous, \textcolor{blue}{the kinetic energy is inherently not conservative. Consequently, the momentum equationis not secondary conservative.}
+  To avoid introducing spurious temperature fluctuations, here \textcolor{blue}{we choose the energy equation to be the equation of internal energy.}
+
+  The mathematical form of governing equations are then given as follows:
+  \begin{subequations}
+    \label{eq:1}
+    \begin{align}
+      \label{eq:2}
+      \frac{\partial}{\partial t}\rho + \frac{\partial}{\partial x_j}(\rho u_j) &= 0,\\
+      \label{eq:3}
+      \frac{\partial}{\partial t}(\rho u_i) + \frac{\partial}{\partial x_j}(\rho u_ju_i) &= \frac{\partial}{\partial x_j}\Bigg(-p\delta_{ij} + \mu\bigg(\frac{\partial u_i}{\partial x_j} + \frac{\partial u_j}{\partial x_i} - \frac{2}{3}\frac{\partial u_k}{\partial x_k}\delta_{ij}\bigg)\Bigg),\\
+      \label{eq:4}
+      \frac{\partial}{\partial t}(\rho e) + \frac{\partial}{\partial x_j}(\rho u_je) &= \frac{\partial}{\partial x_j}\bigg(\lambda\frac{\partial T}{\partial x_j}\bigg) - p\frac{\partial u_k}{\partial x_k} + 2\mu\Bigg(\frac{1}{2}\bigg(\frac{\partial u_i}{\partial x_j} + \frac{\partial u_j}{\partial x_i}\bigg) - \frac{1}{3}\frac{\partial u_k}{\partial x_k}\delta_{ij}\Bigg)^2,\\
+      \label{eq:5}
+      p &= \rho RT\\
+      \label{eq:6}
+      e &= \frac{1}{\gamma - 1}RT,
+      \end{align}
+    \end{subequations}
+    where $x_1, x_2\in[0, L]$ are horizontal and vertical spatial coordinates respectively, $\rho$ is the density, $u_i (i = 1, 2)$ are velocity components, $p$ is the pressure, and $e$ is the internal energy.
+    $\mu = \rho\nu$ is the dynamical viscosity, $\lambda$ is the thermal diffusivity, $R = 287\,\mathrm{J}/(\mathrm{kg}\cdot\mathrm{K})$ is the specific gas constant, $\gamma = c_p/c_v$ is the ratio of specific heats.
+
+    Initially, the flow is stationary, i.e., $u(x_1, x_2, t = 0) = 0$ for all $x_1, x_2$.
+    So, we can assume that the density is initially uniform $\rho(x_1,x_2,t = 0) = \rho_0$ for all $x_1, x_2$.
+    The initial pressure and temperature are uniformly given $p(x_1, x_2, t = 0) = p_0 = 1 \mathrm{bar} = 10^5\, \mathrm{Pa}$ and $T(x_1, x_2, t = 0) = T_0 = 300\, \mathrm{K}$.
+    From these values, we can utilize the equation of state \eqref{eq:5} to obtain $\rho_0 = 100000/86100 \approx 1.161\, (\mathrm{kg}/\mathrm{m}^3)$
+
+    For the boundary conditions, the horizontal velocity on the top wall satisfy $u_1(x_1, x_2 = L, t) = u_w(t) = U_w\sin(\omega t)$, while the velocities on all other walls are $0$ satisfying the no-slip and no-penetration boundary conditions.
+    Since the walls are isothermal, we have $T(x_1 = 0, x_2, t) = T(x_1, x_2 = 0, t) = T(x_1 = L, x_2, t) = T(x_1, x_2 = L, t) = 300\,\mathrm{K}$.
+    The boundary conditions of density  are given following the Navier-Stokes characteristic boundary conditions (NSCBC, \cite{Poinsot1992NSCBC}).
+    \begin{equation}
+      \label{eq:7}
+      \frac{\partial \rho}{\partial t} + \frac{\partial}{\partial n}(\rho u_n) + \frac{\partial}{\partial \tau}(\rho u_\tau) = 0.
+    \end{equation}
+    Here, $n$ is the normal direction to the boundary pointing outwards from the computational domain, and $\tau$ is the tangential direction such that $(n, \tau)$ forms a right-handed local coordinate frame.
+    At the left wall, the unit vectors of the lab frame and the local frame are related as $e_n = -e_{x_1}$ and $e_\tau = -e_{x_2}$.
+    At the bottom wall, we have $e_n = -e_{x_2}$ and $e_{\tau} = e_{x_1}$.
+    At the right wall, we have $e_n = e_{x_1}$ and $e_\tau = e_{x_2}$.
+    At the top wall, we have $e_n = e_{x_2}$ and $e_\tau = -e_{x_1}$.
+    Thus, the boundary conditions of density at each wall can be specified as follows:
+    \begin{subequations}
+      \label{eq:8}
+      \begin{align}
+        \label{eq:9}
+        & \frac{\partial \rho}{\partial t}(0, x_2, t) + \frac{\partial(\rho(0, x_2, t)(-u_1(0, x_2, t)))}{\partial (-x_1)} = 0\Longrightarrow \frac{\partial \rho(0, x_2, t)}{\partial t} + \rho(0, x_2, t)\frac{\partial u_1(0, x_2, t)}{\partial x_1} = 0\\
+        \label{eq:10}
+        & \frac{\partial \rho}{\partial t}(x_1, 0, t) + \frac{\partial(\rho(x_1, 0, t)(-u_2(x_1, 0, t)))}{\partial (-x_2)} = 0\Longrightarrow \frac{\partial \rho(x_1, 0, t)}{\partial t} + \rho(x_1, 0, t)\frac{\partial u_2(x_1, 0, t)}{\partial x_2} = 0\\
+        \label{eq:11}
+        & \frac{\partial \rho}{\partial t}(L, x_2, t) + \frac{\partial(\rho(L, x_2, t)u_1(L, x_2, t))}{\partial x_1} = 0\Longrightarrow \frac{\partial \rho(L, x_2, t)}{\partial t} + \rho(L, x_2, t)\frac{\partial u_1(L, x_2, t)}{\partial x_1} = 0\\
+        & \frac{\partial \rho}{\partial t}(x_1, L, t) + \frac{\partial(\rho(x_1, L, t)u_2(x_1, L, t))}{\partial x_2} + \frac{\partial(\rho(x_1, L, t)(-u_1(x_1, L, t)))}{\partial (-x_1)} = 0\notag\\
+        \label{eq:12}
+        \Longrightarrow & \frac{\partial \rho(x_1, L, t)}{\partial t} + \rho(x_1, L, t)\frac{\partial u_2(x_1, L, t)}{\partial x_2} + u_1(x_1, L, t)\frac{\partial\rho(x_1, L, t)}{\partial x_1} = 0. 
+        \end{align}
+      \end{subequations}
+
+      Next, we non-dimensionalize our governing equations.
+      Let $\rho^* = \rho/\rho_0$, $x_j^* = x_j/L$ and $u_j^* = u_j/U_w$, we have $t^* = t/t_c = U_wt/L$ and $t_c = L/U_w$, where all quantities with the superscript $*$ are dimensionless.
+      The continuity equation \eqref{eq:2} then becomes
+      \begin{equation}
+        \frac{\partial \rho^*}{\partial t^*} + \frac{\partial}{\partial x_j^*}(\rho^*u_j^*) = 0.
+      \end{equation}
+      Additionally, if we let $p^* = p/p_c$ where $p_c = \rho_0U_w^2$, then the momentum equation \eqref{eq:3} becomes
+      \begin{equation}
+        \frac{\partial}{\partial t^*}(\rho^* u_i^*) + \frac{\partial}{\partial x_j^*}(\rho^* u_j^*u_i^*) = -\frac{\partial p^*}{\partial x_i^*} + \frac{1}{\mathrm{Re}}\frac{\partial}{\partial x_j^*}\Bigg(\rho^*\bigg(\frac{\partial u_i^*}{\partial x_j^*} + \frac{\partial u_j^*}{\partial x_i^*} - \frac{2}{3}\frac{\partial u_k^*}{\partial x_k^*}\delta_{ij}\bigg)\Bigg),
+      \end{equation}
+      where $\mathrm{Re} = U_wL/\nu$ is the Reynolds number with $\nu$ the constant kinematic viscosity.
+      Additionally, if we let $e^* = e/e_c$ where $e_c = RT_c/(\gamma - 1)$ and $T_c = T_0 = 300 \,\mathrm{K}$, and let the reference speed of sound $a_c = \sqrt{\gamma RT_c}$, then the internal energy equation \eqref{eq:4} becomes:
+      \begin{equation}
+        \frac{\partial}{\partial t^*}(\rho^* e^*) + \frac{\partial}{\partial x_j^*}(\rho^* u_j^*e^*) = \frac{\gamma}{\mathrm{Pr}\mathrm{Re}}\frac{\partial}{\partial x_j^*}\bigg(\rho^*\frac{\partial T^*}{\partial x_j^*}\bigg) - \gamma(\gamma - 1)\mathrm{Ma}^2p^*\frac{\partial u_k^*}{\partial x_k^*} + \frac{2\mathrm{Ma}^2\gamma(\gamma - 1)}{\mathrm{Re}}\rho^*\Bigg(\frac{1}{2}\bigg(\frac{\partial u_i^*}{\partial x_j^*} + \frac{\partial u_j^*}{\partial x_i^*}\bigg) - \frac{1}{3}\frac{\partial u_k^*}{\partial x_k^*}\delta_{ij}\Bigg)^2,
+      \end{equation}
+      where $\mathrm{Pr} = \rho c_p\nu/\lambda$ is the constant Prandtl number with $c_p$ the constant-pressure specific heat and $\lambda$ the thermal conductivity, $\gamma$ the ratio of specific heats, $\mathrm{Ma} = U_w/a_c$ the Mach number with $a_c = \sqrt{\gamma RT_c}$.
+
+      Apart from non-dimensionalizing the equations, we also need to non-dimensionalize the boundary conditions and initial conditions.
+      For the boundary conditions, we know that the horizontal velocity on the top wall is given by $u_1(x_1, L, t) = U_w\sin(\omega t)$, so we have $u_1^*(x_1^*, 1, t^*) = \sin((\omega L/U_w) t^*) = \sin(2t^*/Re)$.
+      Similarly, the boundary conditions for the dimensionless temperature is $T^*(0, x_2^*, t^*) = T^*(x_1^*, 0, t^*) = T^*(1, x_2^*, t^*) = T^*(x_1^*, 1, t^*) = 1$.
+      For the initial conditions, we have $p^*(x_1^*, x_2^*, 0) = p_0/(\rho_0U_w^2) = 1/(\gamma\mathrm{Ma}^2)$.
+
+      Finally, we combine the dimensionless governing equations, initial conditions, physical boundary conditions and characteristic boundary conditions to form the following problem:
+      \begin{subequations}
+        \label{eq:13}
+        \begin{align}
+          \label{eq:14}
+          & \frac{\partial \rho^*}{\partial t^*} + \frac{\partial}{\partial x_j^*}(\rho^*u_j^*) = 0,\\
+          \label{eq:15}
+          & \frac{\partial}{\partial t^*}(\rho^* u_i^*) + \frac{\partial}{\partial x_j^*}(\rho^* u_j^*u_i^*) = -\frac{\partial p^*}{\partial x_i^*} + \frac{1}{\mathrm{Re}}\frac{\partial}{\partial x_j^*}\Bigg(\rho^*\bigg(\frac{\partial u_i^*}{\partial x_j^*} + \frac{\partial u_j^*}{\partial x_i^*} - \frac{2}{3}\frac{\partial u_k^*}{\partial x_k^*}\delta_{ij}\bigg)\Bigg),\\
+          \label{eq:16}
+          & \frac{\partial}{\partial t^*}(\rho^* e^*) + \frac{\partial}{\partial x_j^*}(\rho^* u_j^*e^*) = \frac{\gamma}{\mathrm{Pr}\mathrm{Re}}\frac{\partial}{\partial x_j^*}\bigg(\rho^*\frac{\partial T^*}{\partial x_j^*}\bigg) - \gamma(\gamma - 1)\mathrm{Ma}^2p^*\frac{\partial u_k^*}{\partial x_k^*} + \frac{2\mathrm{Ma}^2\gamma(\gamma - 1)}{\mathrm{Re}}\rho^*\Bigg(\frac{1}{2}\bigg(\frac{\partial u_i^*}{\partial x_j^*} + \frac{\partial u_j^*}{\partial x_i^*}\bigg) - \frac{1}{3}\frac{\partial u_k^*}{\partial x_k^*}\delta_{ij}\Bigg)^2,\\
+          \label{eq:17}
+          & p^* = \frac{1}{\gamma\mathrm{Ma}^2}\rho^*T^*,\\
+          \label{eq:18}
+          & e^* = T^*,\\
+          \label{eq:19}
+          & u_1^*(x_1^*, 1, t^*) = \sin(2t^*/\mathrm{Re}), u_1^*(0, x_2^*, t^*) = u_1^*(x_1^*, 0, t^*) = u_1^*(1, x_2^*, t^*) = 0,\\
+          \label{eq:20}
+          & u_2^*(x_1^*, 1, t^*) = u_2^*(0, x_2^*, t^*) = u_2^*(x_1^*, 0, t^*) = u_2^*(1, x_2^*, t^*) = 0,\\
+          \label{eq:21}
+          & T^*(0, x_2^*, t^*) = T^*(x_1^*, 0, t^*) = T^*(1, x_2^*, t^*) = T^*(x_1^*, 1, t^*) = 1,\\
+          \label{eq:22}
+          & \frac{\partial \rho^*(0, x_2^*, t^*)}{\partial t^*} + \rho^*(0, x_2^*, t^*)\frac{\partial u_1^*(0, x_2^*, t^*)}{\partial x_1^*} = 0,\\
+          \label{eq:23}
+          & \frac{\partial \rho^*(x_1^*, 0, t^*)}{\partial t^*} + \rho^*(x_1^*, 0, t^*)\frac{\partial u_2^*(x_1^*, 0, t^*)}{\partial x_2^*} = 0,\\
+          \label{eq:24}
+          & \frac{\partial \rho^*(1, x_2^*, t^*)}{\partial t^*} + \rho^*(1, x_2^*, t^*)\frac{\partial u_1^*(1, x_2^*, t^*)}{\partial x_1^*} = 0,\\
+          \label{eq:25}
+          & \frac{\partial \rho^*(x_1^*, 1, t^*)}{\partial t^*} + \rho^*(x_1^*, 1, t^*)\frac{\partial u_2^*(x_1^*, 1, t^*)}{\partial x_2^*} + u_1^*(x_1^*, 1, t^*)\frac{\partial\rho^*(x_1^*, 1, t^*)}{\partial x_1^*} = 0,\\
+          \label{eq:26}
+          & \rho^*(x_1^*, x_2^*, 0) = 1,\\
+          \label{eq:27}
+          & T^*(x_1^*, x_2^*, 0) = 1,\\
+          \label{eq:28}
+          & u_1^*(x_1^*, x_2^*, 0) = u_2^*(x_1^*, x_2^*, 0) = 0,\\
+          \label{eq:29}
+          & \mathrm{Re} = 100, \quad \gamma = 1.4, \quad \mathrm{Ma} = 0.025, \quad \mathrm{Pr} = 0.7.
+          \end{align}
+        \end{subequations}
+
+        Or, one can rewrite the equations in a componentwise form:
+        \begin{subequations}
+        \label{eq:30}
+        \begin{align}
+          \label{eq:31}
+          & \frac{\partial \rho^*}{\partial t^*} + \frac{\partial}{\partial x_1^*}(\rho^*u_1^*) + \frac{\partial}{\partial x_2^*}(\rho^*u_2^*)= 0,\\
+          \label{eq:32}
+          & \frac{\partial}{\partial t^*}(\rho^* u_1^*) + \frac{\partial}{\partial x_1^*}(\rho^* u_1^*u_1^*) + \frac{\partial}{\partial x_2^*}(\rho^* u_2^*u_1^*) = -\frac{\partial p^*}{\partial x_1^*} + \frac{1}{\mathrm{Re}}\frac{\partial}{\partial x_1^*}\Bigg(\rho^*\bigg(\frac{\partial u_1^*}{\partial x_1^*} + \frac{\partial u_1^*}{\partial x_1^*} - \frac{2}{3}(\frac{\partial u_1^*}{\partial x_1^*} + \frac{\partial u_2^*}{\partial x_2^*})\bigg)\Bigg)\notag\\
+          & + \frac{1}{\mathrm{Re}}\frac{\partial}{\partial x_2^*}\Bigg(\rho^*\bigg(\frac{\partial u_1^*}{\partial x_2^*} + \frac{\partial u_2^*}{\partial x_1^*}\bigg)\Bigg),\\
+          \label{eq:33}
+          & \frac{\partial}{\partial t^*}(\rho^* u_2^*) + \frac{\partial}{\partial x_1^*}(\rho^* u_1^*u_2^*) + \frac{\partial}{\partial x_2^*}(\rho^* u_2^*u_2^*) = -\frac{\partial p^*}{\partial x_2^*} + \frac{1}{\mathrm{Re}}\frac{\partial}{\partial x_1^*}\Bigg(\rho^*\bigg(\frac{\partial u_2^*}{\partial x_1^*} + \frac{\partial u_1^*}{\partial x_2^*}\bigg)\Bigg)\notag\\
+          & + \frac{1}{\mathrm{Re}}\frac{\partial}{\partial x_2^*}\Bigg(\rho^*\bigg(\frac{\partial u_2^*}{\partial x_2^*} + \frac{\partial u_2^*}{\partial x_2^*} - \frac{2}{3}(\frac{\partial u_1^*}{\partial x_1^*} + \frac{\partial u_2^*}{\partial x_2^*})\bigg)\Bigg),\\
+          \label{eq:34}
+          & \frac{\partial}{\partial t^*}(\rho^* e^*) + \frac{\partial}{\partial x_1^*}(\rho^* u_1^*e^*) + \frac{\partial}{\partial x_2^*}(\rho^* u_2^*e^*) = \frac{\gamma}{\mathrm{Pr}\mathrm{Re}}\frac{\partial}{\partial x_1^*}\bigg(\rho^*\frac{\partial T^*}{\partial x_1^*}\bigg) + \frac{\gamma}{\mathrm{Pr}\mathrm{Re}}\frac{\partial}{\partial x_2^*}\bigg(\rho^*\frac{\partial T^*}{\partial x_2^*}\bigg) - \gamma(\gamma - 1)\mathrm{Ma}^2p^*\bigg(\frac{\partial u_1^*}{\partial x_1^*} + \frac{\partial u_2^*}{\partial x_2^*}\bigg)\notag\\
+          & + \frac{2\mathrm{Ma}^2\gamma(\gamma - 1)}{\mathrm{Re}}\rho^*\Bigg(\bigg(\frac{\partial u_1^*}{\partial x_1^*}\bigg)^2 + \bigg(\frac{\partial u_2^*}{\partial x_2^*}\bigg)^2 + \frac{1}{2}\bigg(\frac{\partial u_1^*}{\partial x_2^*} + \frac{\partial u_2^*}{\partial x_1^*}\bigg)^2 - \frac{1}{3}\bigg(\frac{\partial u_1^*}{\partial x_1^*} + \frac{\partial u_2^*}{\partial x_2^*}\bigg)^2\Bigg),\\
+        \end{align}
+        \end{subequations}
+
+
+        \section{Choose appropriate finite difference operators for the spatial operators}
+
+        \textcolor{blue}{Since the problem is a low-Reynolds number flow, the dispersion error from spatial discretization schemes will rapidly fade away due to high dissipation. Therefore, the simplest approach is to adopt central schemes.}
+
+        For the first-order spatial derivative, we choose the \textcolor{blue}{second-order central scheme} such that for interior grid points $(i_1, i_2), i_1\neq0, i_1\neq N_x, i_2\neq0, i_2\neq N_y$, we have
+        \begin{subequations}
+          \label{eq:35}
+          \begin{align}
+            \label{eq:36}
+            \frac{\partial (\cdot)^j_{i_1, i_2}}{\partial x_1}\approx\frac{(\cdot)^j_{i_1+1, i_2} - (\cdot)^j_{i_1-1, i_2}}{2\Delta x_1},\\
+            \label{eq:37}
+            \frac{\partial (\cdot)^j_{i_1, i_2}}{\partial x_2}\approx\frac{(\cdot)^j_{i_1, i_2+1} - (\cdot)^j_{i_1, i_2-1}}{2\Delta x_2},
+          \end{align}
+        \end{subequations}
+        where the coordinates of the grid point are $(x_1, x_2)_{i_1, i_2} = (i_1\Delta x_1, i_2\Delta x_2), i_1 = 0, 1, ..., N_{x_1}, i_2 = 0, 1, ..., N_{x_2}$. $\Delta x_1 = 1/N_{x_1}$ and $\Delta x_2 = 1/N_{x_2}$ are dimensionless spacing on two directions.
+        It is worth mentioning that we formulate the central scheme for the second-order spatial derivative in the form of $\partial(\rho \partial u/\partial x)/\partial x$ as follows: First, we evaluate $\rho\partial u/\partial x$ at $(i_1 + 1/2, i_2)$ and $(i_1 - 1/2, i_2)$ via interpolation and central differencing, such that
+        \begin{subequations}
+          \label{eq:38}
+          \begin{align}
+            \label{eq:39}
+            \rho_{i_1 + \frac{1}{2}, i_2}\bigg(\frac{\partial u}{\partial x_1}\bigg)_{i_1 + \frac{1}{2}, i_2} &\approx \frac{\rho_{i_1, i_2} + \rho_{i_1+1, i_2}}{2}\frac{u_{i_1+1, i_2} - u_{i_1, i_2}}{\Delta x_1},\\
+            \label{eq:40}
+            \rho_{i_1 - \frac{1}{2}, i_2}\bigg(\frac{\partial u}{\partial x_1}\bigg)_{i_1 - \frac{1}{2}, i_2} &\approx \frac{\rho_{i_1-1, i_2} + \rho_{i_1, i_2}}{2}\frac{u_{i_1, i_2} - u_{i_1-1, i_2}}{\Delta x_1}.
+            \end{align}
+          \end{subequations}
+          Afterwards, we perform central differencing again to obtain the approximation
+          \begin{align}
+            \label{eq:41}
+            \Bigg(\frac{\partial}{\partial x_1}\bigg(\rho\frac{\partial u}{\partial x_1}\bigg)\Bigg)_{i_1, i_2} &\approx \frac{\rho_{i_1 + \frac{1}{2}, i_2}(\partial u/\partial x_1)_{i_1 + \frac{1}{2}, i_2} - \rho_{i_1 - \frac{1}{2}, i_2}(\partial u/\partial x_1)_{i_1 - \frac{1}{2}, i_2}}{\Delta x_1}\notag\\
+            &\approx \frac{\rho_{i_1, i_2} + \rho_{i_1+1, i_2}}{2}\frac{u_{i_1+1, i_2} - u_{i_1, i_2}}{(\Delta x_1)^2} - \frac{\rho_{i_1-1, i_2} + \rho_{i_1, i_2}}{2}\frac{u_{i_1, i_2} - u_{i_1-1, i_2}}{(\Delta x_1)^2}.
+          \end{align}
+
+          For the points on the domain boundaries, we only care about the values of density since the values of velocities and temperature are specified on the walls.
+          To evaluate the derivatives, we adopt a one-sided scheme to preserve global second-order accuracy while utilizing only points within the domain.
+          The specific schemes are as follows:
+          \begin{subequations}
+            \label{eq:42}
+            \begin{align}
+              \label{eq:43}
+              \bigg(\frac{\partial u_1}{\partial x_1}\bigg)_{0, i_2} & \approx \frac{-3(u_1)_{0, i_2} + 4(u_1)_{1, i_2} - (u_1)_{2, i_2}}{2\Delta x_1}\\
+              \label{eq:44}
+              \bigg(\frac{\partial u_2}{\partial x_2}\bigg)_{i_1, 0} & \approx \frac{-3(u_2)_{i_1, 0} + 4(u_2)_{i_1, 1} - (u_2)_{i_1, 2}}{2\Delta x_2}\\
+              \label{eq:45}
+              \bigg(\frac{\partial u_1}{\partial x_1}\bigg)_{N_{x_1}, i_2} & \approx \frac{3(u_1)_{N_{x_1}, i_2} - 4(u_1)_{N_{x_1}-1, i_2} + (u_1)_{N_{x_1}-2, i_2}}{2\Delta x_1}\\
+              \label{eq:46}
+              \bigg(\frac{\partial u_2}{\partial x_2}\bigg)_{i_1, N_{x_2}} & \approx \frac{3(u_2)_{i_1, N_{x_2}} - 4(u_2)_{i_1, N_{x_2}-1} + (u_2)_{i_1, N_{x_2}-2}}{2\Delta x_2}
+              \end{align}
+            \end{subequations}
+
+            \section{Choose appropriate temporal schemes and solution methods}
+
+            In this work, we will choose the 4th-order Runge-Kutta method, since it is easy to implement in our code, has a high temporal accuracy of $O(\Delta t^4)$, and allows us to take a relatively larger timestep compared to forward-Euler method or other low-order explicit schemes.
+
+            \section{Expected approximate CFL limits}
+
+            Since we are working on compressible flow problems, an upper limit of the CFL number for this 2D problem can be approximated by
+            \begin{equation}
+              \label{eq:47}
+              C = \frac{(|u_1|_{\max} + a_{\max})\Delta t}{\Delta x_1} + \frac{(|u_2|_{\max} + a_{\max})\Delta t}{\Delta x_2}.
+            \end{equation}
+            As we know, for a 1D linear advection PDE $\partial_t u + a\partial_x u = 0$ with the second-order central scheme for spatial derivatives and the 4th-order Runge-Kutta timestepper, the CFL number $a\Delta t/\Delta x$ has a limit of $2\sqrt{2}$.
+            So, we can utilize this conclusion to give the same upper bound for our CFL number:
+            \begin{equation*}
+              C \leq 2\sqrt{2} \Longrightarrow \frac{(|u_1|_{\max} + a_{\max})\Delta t}{\Delta x_1} + \frac{(|u_2|_{\max} + a_{\max})\Delta t}{\Delta x_2}\leq 2\sqrt{2}.
+            \end{equation*}
+            Based on the fact that $|u_1|_{\max} = O(U_w)$, $|u_2|_{\max} = O(U_w)$ and $a_{\max} = O(a_c) = O(\sqrt{\gamma R T_0})$, we finally obtain an estimation of the maximal timestep given spatial spacing:
+            \begin{equation}
+              \label{eq:48}
+              \frac{(\mathrm{Ma} + 1)a_c\Delta t}{\Delta x}\leq\sqrt{2},
+            \end{equation}
+            where we assume that $\Delta x_1 = \Delta x_2$ for a square domain.
+            Substituting $a_c = \sqrt{\gamma RT_0} \approx 347.2$ and $\mathrm{Ma} = 0.025$, we have
+            \begin{equation}
+              \label{eq:49}
+              \Delta t\leq \frac{\sqrt{2}\Delta x}{(\mathrm{Ma} + 1)a_0} \approx 3.974\times 10^{-3}\Delta x.
+            \end{equation}
+            In numerical implementations, we often want to restrict this upper bound by multiplying it with a relaxation parameter.
+            For instance, a more robust upper bound for $\Delta t$ could be:
+            \begin{equation}
+              \label{eq:50}
+              \Delta t\leq 2.5\times 10^{-3}\Delta x.
+            \end{equation}
+
+            \section{Pseudo-code of the algorithm for lid-driven flow solver}
+            See the next page.
+            
+            \begin{algorithm}
+\caption{RK4-CS Solver for 2D Compressible Lid-Driven Cavity Flow}
+\label{alg:solver}
+\begin{algorithmic}[1]
+  \State \textbf{Input constants:}
+  $\mathrm{Re}$, $\mathrm{Ma}$, $\mathrm{Pr}$, $\gamma$; number of grid points: $N_{x_1}, N_{x_2}$ with grid spacing $\Delta x_1^* = 1/N_{x_1}$, $\Delta x_2^* = 1/N_{x_2}$; timestep $\Delta t^*$ within the stability limit \eqref{eq:51}; number of timesteps $N_t$.
+  \State \textbf{Initialize the grid-based variables:} Set $\rho^*(i_1\Delta x_1^* i_2\Delta x_2^*, 0) = 1$, $u_1^*(i_1\Delta x_1^*, i_2\Delta x_2^*, 0) = 0$, $u_2^*(i_1\Delta x_1^*, i_2\Delta x_2^*, 0) = 0$, and $T^*(i_1\Delta x_1^*, i_2\Delta x_2^*, 0) = 1$ for $i_1 = 0, 1, ..., N_{x_1}$, $i_2 = 0, 1, ..., N_{x_2}$ based on \eqref{eq:26}-\eqref{eq:29}.
+  \State \textbf{Define the conservative variables:} Let $\mathbf{U} = (\rho^*, \rho^* u_1^*, \rho^* u_2^*, \rho^* e^*)$ be the variable to be advanced in time, where $e^* = T^*$. 
+  \State \textbf{Main timestepping loop:}
+  \For{$j = 0$ to $N_t$} (\textbf{the 4th-order Runge-Kutta scheme})
+    \State $t^* \leftarrow j\Delta t^*$
+    \State Extract current $|u_1|_{\max} = U_w|u_1|^*_{\max}, |u_2|_{\max} = U_w|u_2|^*_{\max}, a_{\max} = \sqrt{\gamma R T_0T^*_{\max}}$ from the field $\mathbf{U}(t^*)$.
+        \State Evaluate the CFL number $C \gets \frac{(|u_1|_{\max} + a_{\max})\Delta t^*}{\Delta x_1^*} + \frac{(|u_2|_{\max} + a_{\max})\Delta t^*}{\Delta x_2^*}$.
+        \If{$C > 2\sqrt{2}$}
+            \State \textbf{Warning:} Timestep $\Delta t^*$ violates the CFL stability limit.
+            \State \textbf{Exit}.
+        \EndIf
+    \State $\mathbf{U}_0 \gets \mathbf{U}(t^*)$
+    \State $\mathbf{k}_1 \gets \Delta t^* \cdot \text{RHS}(\mathbf{U}_0, t^*)$
+    \State $\mathbf{k}_2 \gets \Delta t^* \cdot \text{RHS}(\mathbf{U}_0 + 0.5\mathbf{k}_1, t^* + 0.5\Delta t^*)$
+    \State $\mathbf{k}_3 \gets \Delta t^* \cdot \text{RHS}(\mathbf{U}_0 + 0.5\mathbf{k}_2, t^* + 0.5\Delta t^*)$
+    \State $\mathbf{k}_4 \gets \Delta t^* \cdot \text{RHS}(\mathbf{U}_0 + \mathbf{k}_3, t^* + \Delta t^*)$
+    \State $\mathbf{U}(t^* + \Delta t^*) \gets \mathbf{U}_0 + \frac{1}{6}(\mathbf{k}_1 + 2\mathbf{k}_2 + 2\mathbf{k}_3 + \mathbf{k}_4)$
+    \EndFor
+
+\hrulefill
+\Function{RHS}{$\mathbf{U}, t^*$}
+    \State \textbf{Initialization:} Set $d\mathbf{U}/dt$ to be zero.
+    \State Extract variables $\rho^*, u_1^*, u_2^*, T^*, e^*, p^*$ from the input $\mathbf{U}$.
+    \State Apply the no-slip no-penetration boundary conditions for $u_1^*, u_2^*$ on all walls according to \eqref{eq:19}\eqref{eq:20} using $t^*$.
+    \State Apply the isothermal boundary conditions for $T^*$ on all walls according to \eqref{eq:21}.
+    
+
+    \For{$i_1 = 1$ to $N_{x_1}-1$}
+        \For{$i_2 = 1$ to $N_{x_2}-1$}
+            \State Calculate all first and second spatial derivatives on interior points using central schemes \eqref{eq:35}-\eqref{eq:41} to evaluate the RHS for continuity, momentum, and energy equations \eqref{eq:31}-\eqref{eq:34}.
+            \State Store results in the corresponding elements of $d\mathbf{U}/dt$.
+        \EndFor
+    \EndFor
+    
+    \For{$i_2 = 1$ to $N_{x_2}-1$}
+        \State Compute $(\partial u_1^*/\partial x_1^*)_{0,i_2}$ using the second-order one-sided scheme \eqref{eq:43}.
+        \State $(\frac{d\rho^*}{dt})_{0,i_2} \gets (-\rho^*\partial u_1^*/\partial x_1^*)_{0,i_2}$.
+    \EndFor
+    \State Repeat Step 25-28 for the bottom ($i_2=0$, \eqref{eq:23}) and the right ($i_1=N_{x_1}$, \eqref{eq:24}) walls using corresponding one-sided schemes.
+    
+    \For{$i_1 = 1$ to $N_{x_1}-1$}
+        \State Compute $(\partial u_2^*/\partial x_2^*)_{i_1,N_{x_2}}$ using the second-order one-sided scheme \eqref{eq:46}.
+        \State Compute $(\partial \rho^*/\partial x_1^*)_{i_1,N_{x_2}}$ using the second-order central scheme.
+        \State $(\frac{d\rho^*}{dt})_{i_1,N_{x_2}} \gets (-\rho^*\partial u_2^*/\partial x_2^*)_{i_1, N_{x_2}} - (u_1^*\partial \rho^*/\partial x_1^*)_{i_1,N_{x_2}}$.
+        \EndFor
+
+        \State $(\frac{d\rho^*}{dt})_{0,0} \gets 0$ according to the density BCs at the bottom and the left walls \eqref{eq:22}\eqref{eq:23}.
+        \State $(\frac{d\rho^*}{dt})_{N_{x_1},0} \gets 0$ according to the density BCs at the bottom and the right walls \eqref{eq:23}\eqref{eq:24}.
+    
+    \State Compute $(\partial \rho^*/\partial x_1^*)_{0,N_{x_2}}$ using a second-order one-sided difference scheme.
+    \State $(\frac{d\rho^*}{dt})_{0,N_{x_2}} \gets -(u_1^*\frac{\partial\rho^*}{\partial x_1^*})_{0,N_{x_2}}$ according to the density BC at the top wall \eqref{eq:25} (ignoring the BC at the left wall).
+    
+    \State Compute $(\partial \rho^*/\partial x_1^*)_{N_{x_1},N_{x_2}}$ using a second-order one-sided difference scheme.
+    \State $(\frac{d\rho^*}{dt})_{N_{x_1},N_{x_2}} \gets -(u_1^*\frac{\partial\rho^*}{\partial x_1^*})_{N_{x_1},N_{x_2}}$ according to the density BC at the top wall \eqref{eq:25} (ignoring the BC at the right wall).
+    
+    \State \Return $\frac{d\mathbf{U}}{dt}$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+    
+\iffalse{
+\begin{figure}[tbp]
+  \centering
+  \begin{tikzonimage}[width=0.4\linewidth]{solution_implicit_nu_1_dt_1_nx_120_converged.png}%[tsx/show help lines]
+    \node at (0.55, -0.05) {(a)};
+  \end{tikzonimage} 
+  \begin{tikzonimage}[width=0.4\linewidth]{solution_implicit_nu_0.01_dt_1_nx_120_converged.png}%[tsx/show help lines]
+    \node at (0.55, -0.05) {(b)};
+  \end{tikzonimage}
+  \caption{Solutions of Burgers' equation at different $\nu$ and $\Delta t$ using the implicit approach for stability analysis.}
+  \label{fig:solution_implicit}
+\end{figure} }\fi
+
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}
